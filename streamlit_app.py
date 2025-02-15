@@ -23,7 +23,7 @@ def get_exchange_instance(exchange_name):
     elif exchange_name == 'Coinex':
         return ccxt.coinex({'enableRateLimit': True, 'options': {'defaultType': 'swap'}})
     elif exchange_name == 'GateIO':
-        return ccxt.gate({'enableRateLimit': True, 'options': {'defaultType': 'future'}})
+        return ccxt.gate({'enableRateLimit': True, 'options': {'defaultType': 'swap'}})
 
 # Streamlit UI
 st.title('交易对差价监测')
