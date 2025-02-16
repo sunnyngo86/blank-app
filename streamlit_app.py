@@ -85,7 +85,8 @@ def ex1_getOrderbook(symbol):
                 ex1_bid_qty = response['result']['orderbook_p']['bids'][0][1]
                 return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
             elif exchange1 == 'Lbank':
-                url = f'https://lbkperp.lbank.com/cfd/openApi/v1/pub/marketOrder?depth=1&symbol={symbol}USDT'
+                url = f'https://api.binance.com/api/v3/depth?symbol={symbol}USDT'
+                # url = f'https://lbkperp.lbank.com/cfd/openApi/v1/pub/marketOrder?depth=1&symbol={symbol}USDT'
                 response = requests.get(url).json()
                 ex1_bid_px = response['data']['bids'][0]['price']
                 ex1_ask_px = response['data']['asks'][0]['price']
