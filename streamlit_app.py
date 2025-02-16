@@ -15,9 +15,7 @@ st.set_page_config(
         'About': None  # 移除关于链接
     }
 )
-
-# 禁用工具栏
-hide_streamlit_style = """
+hide_footer_style = """
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
@@ -29,9 +27,12 @@ hide_streamlit_style = """
         .stApp [data-testid="stStatusWidget"] {display: none;}
         .stApp [data-testid="stHeader"] {display: none;}
         .stApp [data-testid="stSidebar"] {display: none;}
+        .stApp footer {display: none;}
+        .stApp [data-testid="stFooter"] {display: none;}
+        .stApp [data-testid="stMarkdownContainer"] {display: none;}
     </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_footer_style, unsafe_allow_html=True)
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
     if exchange_name == 'Binance':
