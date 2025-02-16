@@ -93,8 +93,7 @@ def ex1_getOrderbook(symbol):
                 ex1_ask_qty = response['data']['asks'][0]['volume']
                 return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
             elif exchange1 == 'Aevo':
-                url = f'https://api.binance.com/api/v3/depth?symbol={symbol}USDT'
-                # url = f'https://api.aevo.xyz/orderbook?instrument_name={symbol}-PERP'
+                url = f'https://api.aevo.xyz/orderbook?instrument_name={symbol}-PERP'
                 response = requests.get(url).json()
                 ex1_ask_px = response['asks'][0][0]
                 ex1_bid_px = response['bids'][0][0]
