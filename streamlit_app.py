@@ -190,7 +190,7 @@ def ex2_getOrderbook(symbol):
                 ex2_ask_qty = response['result']['orderbook_p']['asks'][0][1]
                 ex2_bid_qty = response['result']['orderbook_p']['bids'][0][1]
                 return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
-            elif exchange2_var.get() == 'XT':
+            elif exchange2 == 'XT':
                 url = f'https://fapi.xt.com/future/market/v1/public/q/depth?symbol={symbol}_USDT&level=1'
                 response = requests.get(url).json()
                 ex2_ask_px = response['result']['a'][0][0]
@@ -221,14 +221,6 @@ def ex2_getOrderbook(symbol):
                 ex2_ask_px = response['data']['asks'][0][0]
                 ex2_bid_qty = response['data']['bids'][0][1]
                 ex2_ask_qty = response['data']['asks'][0][1]
-                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
-            elif exchange2_var.get() == 'BybitSPOT':
-                url = f'https://api.bybit.com/spot/v3/public/quote/depth?symbol={symbol}USDT'
-                response = requests.get(url).json()
-                ex2_ask_px = response['result']['asks'][0][0]
-                ex2_bid_px = response['result']['bids'][0][0]
-                ex2_ask_qty = response['result']['asks'][0][1]
-                ex2_bid_qty = response['result']['bids'][0][1]
                 return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
             elif exchange2 == 'Lbank':
                 url = f'https://lbkperp.lbank.com/cfd/openApi/v1/pub/marketOrder?depth=1&symbol={symbol}USDT'
