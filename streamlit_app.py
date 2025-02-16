@@ -84,7 +84,7 @@ def ex1_getOrderbook(symbol):
                 ex1_ask_qty = response['result']['orderbook_p']['asks'][0][1]
                 ex1_bid_qty = response['result']['orderbook_p']['bids'][0][1]
                 return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
-           elif exchange1 == 'XT':
+            elif exchange1 == 'XT':
                 url = f'https://fapi.xt.com/future/market/v1/public/q/depth?symbol={symbol}_USDT&level=1'
                 response = requests.get(url).json()
                 ex1_ask_px = response['result']['a'][0][0]
