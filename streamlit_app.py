@@ -30,8 +30,8 @@ st.title('交易对差价监测')
 
 # 输入框和下拉菜单
 symbol = st.text_input("币种:", value="BTC")
-exchange1 = st.selectbox("交易所1:", ["MEXC", "Bitget", "GateIO", "Phemex", "Lbank", "Hyperliquid", "Aevo", "Huobi", "Coincatch", "Poinex", "XT", "Binance X", "Bybit X", "BybitSPOT X", "MEXCSPOT X", "OKX X","Coinex X", "Bitmart X"], index=1)
-exchange2 = st.selectbox("交易所2:", ["MEXC", "Bitget", "GateIO", "Phemex", "Lbank", "Hyperliquid", "Aevo", "Huobi", "Coincatch", "Poinex", "XT", "Binance X", "Bybit X", "BybitSPOT X", "MEXCSPOT X", "OKX X","Coinex X", "Bitmart X"], index=3)
+exchange1 = st.selectbox("交易所1:", ["MEXC", "GateIO", "Bitget", "Phemex", "Lbank", "Hyperliquid", "Aevo", "Huobi", "Coincatch", "Poinex", "XT", "Binance X", "Bybit X", "BybitSPOT X", "MEXCSPOT X", "OKX X","Coinex X", "Bitmart X"], index=0)
+exchange2 = st.selectbox("交易所2:", ["MEXC", "GateIO", "Bitget", "Phemex", "Lbank", "Hyperliquid", "Aevo", "Huobi", "Coincatch", "Poinex", "XT", "Binance X", "Bybit X", "BybitSPOT X", "MEXCSPOT X", "OKX X","Coinex X", "Bitmart X"], index=1)
 
 # 根据用户选择的币种和交易所更新参数
 def update_parameters():
