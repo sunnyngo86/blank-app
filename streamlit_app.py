@@ -292,10 +292,11 @@ def price_diff(start, end):
 
 # 创建占位符
 long_placeholder = st.empty()
-short_placeholder = st.empty()
 diff_long_placeholder = st.empty()
-diff_short_placeholder = st.empty()
 diffprice_long_placeholder = st.empty()
+NA_placeholder = st.empty()
+short_placeholder = st.empty()
+diff_short_placeholder = st.empty()
 diffprice_short_placeholder = st.empty()
 
 # 更新显示
