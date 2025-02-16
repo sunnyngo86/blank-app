@@ -15,7 +15,8 @@ st.set_page_config(
         'About': None  # 移除关于链接
     }
 )
-hide_footer_style = """
+# 禁用工具栏
+hide_streamlit_style = """
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
@@ -27,12 +28,29 @@ hide_footer_style = """
         .stApp [data-testid="stStatusWidget"] {display: none;}
         .stApp [data-testid="stHeader"] {display: none;}
         .stApp [data-testid="stSidebar"] {display: none;}
-        .stApp footer {display: none;}
-        .stApp [data-testid="stFooter"] {display: none;}
-        .stApp [data-testid="stMarkdownContainer"] {display: none;}
     </style>
 """
-st.markdown(hide_footer_style, unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# 使用 JavaScript 动态移除页脚
+hide_footer_js = """
+    <script>
+        // 移除页脚
+        function hideFooter() {
+            const footer = document.querySelector("footer");
+            if (footer) {
+                footer.style.display = "none";
+            }
+            const createdBy = document.querySelector("[data-testid='stFooter']");
+            if (createdBy) {
+                createdBy.style.display = "none";
+            }
+        }
+        // 每隔 100ms 检查一次，确保页脚被移除
+        setInterval(hideFooter, 100);
+    </script>
+"""
+st.components.v1.html(hide_footer_js, height=0, width=0)
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
     if exchange_name == 'Binance':
