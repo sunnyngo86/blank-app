@@ -3,9 +3,9 @@ import time
 import requests
 import json
 import streamlit as st
-# Add custom CSS to hide the GitHub icon
+
 st.set_page_config(
-    page_title="Your App Title",
+    page_title="Sunny Bot",
     page_icon=":rocket:",
     layout="centered",
     initial_sidebar_state="auto",
