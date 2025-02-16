@@ -15,6 +15,18 @@ st.set_page_config(
         'About': None  # 移除关于链接
     }
 )
+
+# 隐藏 GitHub 链接
+hide_github_link_style = """
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .viewerBadge_container__1QSob {display: none;}
+        .stDeployButton {display: none;}
+    </style>
+"""
+st.markdown(hide_github_link_style, unsafe_allow_html=True)
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
     if exchange_name == 'Binance':
