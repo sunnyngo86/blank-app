@@ -16,18 +16,6 @@ st.set_page_config(
     }
 )
 
-# 隐藏 GitHub 链接
-hide_github_link_style = """
-    <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        .viewerBadge_container__1QSob {display: none;}
-        .stDeployButton {display: none;}
-    </style>
-"""
-st.markdown(hide_github_link_style, unsafe_allow_html=True)
-
 # 禁用工具栏
 hide_streamlit_style = """
     <style>
