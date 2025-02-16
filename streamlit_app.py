@@ -4,17 +4,16 @@ import requests
 import json
 import streamlit as st
 # Add custom CSS to hide the GitHub icon
-st.markdown(
-    """
-    <style>
-    .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob,
-    .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137,
-    .viewerBadge_text__1JaDK {
-        display: none;
+st.set_page_config(
+    page_title="Your App Title",
+    page_icon=":rocket:",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items={
+        'Get Help': None,  # 移除帮助链接
+        'Report a bug': None,  # 移除报告问题链接
+        'About': None  # 移除关于链接
     }
-    </style>
-    """,
-    unsafe_allow_html=True
 )
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
