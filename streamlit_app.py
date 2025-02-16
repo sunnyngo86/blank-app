@@ -30,8 +30,8 @@ st.title('交易对差价监测')
 
 # 输入框和下拉菜单
 symbol = st.text_input("币种:", value="BTC")
-exchange1 = st.selectbox("交易所1:", ["Binance", "Bybit", "BybitSPOT", "MEXC", "MEXCSPOT", "Bitget", "GateIO", "OKX", "Phemex", "Huobi", "Coinex", "XT", "Fairdesk", "Coincatch", "Bitmart", "Poinex", "Lbank", "Hyperliquid", "Aevo"], index=3)
-exchange2 = st.selectbox("交易所2:", ["Binance", "Bybit", "BybitSPOT", "MEXC", "MEXCSPOT", "Bitget", "GateIO", "OKX", "Phemex", "Huobi", "Coinex", "XT", "Fairdesk", "Coincatch", "Bitmart", "Poinex", "Lbank", "Hyperliquid", "Aevo"], index=6)
+exchange1 = st.selectbox("交易所1:", ["Binance X", "Bybit X", "BybitSPOT X", "MEXC", "MEXCSPOT X", "Bitget", "GateIO", "OKX X", "Phemex", "Huobi", "Coinex", "XT", "Fairdesk", "Coincatch", "Bitmart", "Poinex", "Lbank", "Hyperliquid", "Aevo"], index=3)
+exchange2 = st.selectbox("交易所2:", ["Binance X", "Bybit X", "BybitSPOT X", "MEXC", "MEXCSPOT X", "Bitget", "GateIO", "OKX X", "Phemex", "Huobi", "Coinex", "XT", "Fairdesk", "Coincatch", "Bitmart", "Poinex", "Lbank", "Hyperliquid", "Aevo"], index=6)
 
 # 根据用户选择的币种和交易所更新参数
 def update_parameters():
@@ -83,6 +83,46 @@ def ex1_getOrderbook(symbol):
                 ex1_bid_px = response['result']['orderbook_p']['bids'][0][0]
                 ex1_ask_qty = response['result']['orderbook_p']['asks'][0][1]
                 ex1_bid_qty = response['result']['orderbook_p']['bids'][0][1]
+                return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
+           elif exchange1 == 'XT':
+                url = f'https://fapi.xt.com/future/market/v1/public/q/depth?symbol={symbol}_USDT&level=1'
+                response = requests.get(url).json()
+                ex1_ask_px = response['result']['a'][0][0]
+                ex1_bid_px = response['result']['b'][0][0]
+                ex1_ask_qty = response['result']['a'][0][1]
+                ex1_bid_qty = response['result']['b'][0][1]
+                return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
+            elif exchange1 == 'Coincatch':
+                url = f'https://api.coincatch.com/api/mix/v1/market/depth?symbol={symbol}USDT_UMCBL'
+                response = requests.get(url).json()
+                ex1_bid_px = response['data']['bids'][0][0]
+                ex1_ask_px = response['data']['asks'][0][0]
+                ex1_bid_qty = response['data']['bids'][0][1]
+                ex1_ask_qty = response['data']['asks'][0][1]
+                return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
+            elif exchange1 == 'Bitmart':
+                url = f'https://api-cloud.bitmart.com/contract/public/depth?symbol={symbol}USDT'
+                response = requests.get(url).json()
+                ex1_bid_px = response['data']['bids'][0][0]
+                ex1_ask_px = response['data']['asks'][0][0]
+                ex1_bid_qty = response['data']['bids'][0][1]
+                ex1_ask_qty = response['data']['asks'][0][1]
+                return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
+            elif exchange1 == 'Poinex':
+                url = f'https://api.pionex.com/api/v1/market/depth?symbol={symbol}_USDT'
+                response = requests.get(url).json()
+                ex1_bid_px = response['data']['bids'][0][0]
+                ex1_ask_px = response['data']['asks'][0][0]
+                ex1_bid_qty = response['data']['bids'][0][1]
+                ex1_ask_qty = response['data']['asks'][0][1]
+                return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
+            elif exchange1 == 'BybitSPOT':
+                url = f'https://api.bybit.com/spot/v3/public/quote/depth?symbol={symbol}USDT'
+                response = requests.get(url).json()
+                ex1_ask_px = response['result']['asks'][0][0]
+                ex1_bid_px = response['result']['bids'][0][0]
+                ex1_ask_qty = response['result']['asks'][0][1]
+                ex1_bid_qty = response['result']['bids'][0][1]
                 return ex1_ask_px, ex1_bid_px, ex1_ask_qty, ex1_bid_qty
             elif exchange1 == 'Lbank':
                 url = f'https://lbkperp.lbank.com/cfd/openApi/v1/pub/marketOrder?depth=1&symbol={symbol}USDT'
@@ -149,6 +189,46 @@ def ex2_getOrderbook(symbol):
                 ex2_bid_px = response['result']['orderbook_p']['bids'][0][0]
                 ex2_ask_qty = response['result']['orderbook_p']['asks'][0][1]
                 ex2_bid_qty = response['result']['orderbook_p']['bids'][0][1]
+                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
+            elif exchange2_var.get() == 'XT':
+                url = f'https://fapi.xt.com/future/market/v1/public/q/depth?symbol={symbol}_USDT&level=1'
+                response = requests.get(url).json()
+                ex2_ask_px = response['result']['a'][0][0]
+                ex2_bid_px = response['result']['b'][0][0]
+                ex2_ask_qty = response['result']['a'][0][1]
+                ex2_bid_qty = response['result']['b'][0][1]
+                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
+            elif exchange2 == 'Coincatch':
+                url = f'https://api.coincatch.com/api/mix/v1/market/depth?symbol={symbol}USDT_UMCBL'
+                response = requests.get(url).json()
+                ex2_bid_px = response['data']['bids'][0][0]
+                ex2_ask_px = response['data']['asks'][0][0]
+                ex2_bid_qty = response['data']['bids'][0][1]
+                ex2_ask_qty = response['data']['asks'][0][1]
+                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
+            elif exchange2 == 'Bitmart':
+                url = f'https://api-cloud.bitmart.com/contract/public/depth?symbol={symbol}USDT'
+                response = requests.get(url).json()
+                ex2_bid_px = response['data']['bids'][0][0]
+                ex2_ask_px = response['data']['asks'][0][0]
+                ex2_bid_qty = response['data']['bids'][0][1]
+                ex2_ask_qty = response['data']['asks'][0][1]
+                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
+            elif exchange2 == 'Poinex':
+                url = f'https://api.pionex.com/api/v1/market/depth?symbol={symbol}_USDT'
+                response = requests.get(url).json()
+                ex2_bid_px = response['data']['bids'][0][0]
+                ex2_ask_px = response['data']['asks'][0][0]
+                ex2_bid_qty = response['data']['bids'][0][1]
+                ex2_ask_qty = response['data']['asks'][0][1]
+                return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
+            elif exchange2_var.get() == 'BybitSPOT':
+                url = f'https://api.bybit.com/spot/v3/public/quote/depth?symbol={symbol}USDT'
+                response = requests.get(url).json()
+                ex2_ask_px = response['result']['asks'][0][0]
+                ex2_bid_px = response['result']['bids'][0][0]
+                ex2_ask_qty = response['result']['asks'][0][1]
+                ex2_bid_qty = response['result']['bids'][0][1]
                 return ex2_ask_px, ex2_bid_px, ex2_ask_qty, ex2_bid_qty
             elif exchange2 == 'Lbank':
                 url = f'https://lbkperp.lbank.com/cfd/openApi/v1/pub/marketOrder?depth=1&symbol={symbol}USDT'
