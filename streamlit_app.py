@@ -321,7 +321,7 @@ def update_display():
     long_placeholder.write(f"{exchange1} 空 | {exchange2} 多 \n{ex1_bid_px} | {ex2_ask_px}")
     diff_long_placeholder.write(f"差价: {diff_long}%")
     diffprice_long_placeholder.write(f"价格差: {diffprice_long}")
-    
+    NA_placeholder.write(f"-----------------------------------------")
     short_placeholder.write(f"{exchange1} 多 | {exchange2} 空 \n{ex1_ask_px} | {ex2_bid_px}")
     diff_short_placeholder.write(f"差价: {diff_short}%")
     diffprice_short_placeholder.write(f"价格差: {diffprice_short}")
