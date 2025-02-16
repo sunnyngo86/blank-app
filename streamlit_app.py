@@ -3,7 +3,13 @@ import time
 import requests
 import json
 import streamlit as st
-
+# Add custom CSS to hide the GitHub icon
+hide_github_icon = """
+#GithubIcon {
+  visibility: hidden;
+}
+"""
+st.markdown(hide_github_icon, unsafe_allow_html=True)
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
     if exchange_name == 'Binance':
