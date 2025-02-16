@@ -317,12 +317,13 @@ def update_display():
     diffprice_short = "{:.6f}".format(diffprice_short)
 
     # 更新占位符内容
-    long_placeholder.write(f"{exchange1} 空 | {exchange2} 多 \n{ex1_bid_px} | {ex2_ask_px} | 价差: {diff_long}% | 价格差: {diffprice_long}")
-    short_placeholder.write(f"{exchange1} 多 | {exchange2} 空 \n{ex1_ask_px} | {ex2_bid_px} | 价差: {diff_short}% | 价格差: {diffprice_short}")
-    diff_long_placeholder.write(f"差价 (长): {diff_long}%")
-    diff_short_placeholder.write(f"差价 (短): {diff_short}%")
-    diffprice_long_placeholder.write(f"价格差 (长): {diffprice_long}")
-    diffprice_short_placeholder.write(f"价格差 (短): {diffprice_short}")
+    long_placeholder.write(f"{exchange1} 空 | {exchange2} 多 \n{ex1_bid_px} | {ex2_ask_px}")
+    diff_long_placeholder.write(f"差价: {diff_long}%")
+    diffprice_long_placeholder.write(f"价格差: {diffprice_long}")
+    
+    short_placeholder.write(f"{exchange1} 多 | {exchange2} 空 \n{ex1_ask_px} | {ex2_bid_px}")
+    diff_short_placeholder.write(f"差价: {diff_short}%")
+    diffprice_short_placeholder.write(f"价格差: {diffprice_short}")
 
 # 更新参数
 update_parameters()
