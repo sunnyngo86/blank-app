@@ -27,6 +27,23 @@ hide_github_link_style = """
     </style>
 """
 st.markdown(hide_github_link_style, unsafe_allow_html=True)
+
+# 禁用工具栏
+hide_streamlit_style = """
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .viewerBadge_container__1QSob {display: none;}
+        .stDeployButton {display: none;}
+        .stApp [data-testid="stToolbar"] {display: none;}
+        .stApp [data-testid="stDecoration"] {display: none;}
+        .stApp [data-testid="stStatusWidget"] {display: none;}
+        .stApp [data-testid="stHeader"] {display: none;}
+        .stApp [data-testid="stSidebar"] {display: none;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 # 获取交易所实例
 def get_exchange_instance(exchange_name):
     if exchange_name == 'Binance':
