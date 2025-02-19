@@ -365,13 +365,13 @@ def update_display():
     diffprice_short = "{:.6f}".format(diffprice_short)
 
     # 更新占位符内容
-    long_placeholder.markdown(f"<font size='5'>{exchange1} 空 | {exchange2} 多</font>\n<font size='5'>{ex1_bid_px} | {ex2_ask_px}</font>", unsafe_allow_html=True)
-    diff_long_placeholder.markdown(f"<font size='5'>差价: {diff_long}%</font>", unsafe_allow_html=True)
-    diffprice_long_placeholder.markdown(f"<font size='5'>价格差: {diffprice_long}</font>", unsafe_allow_html=True)
-    NA_placeholder.markdown(f"<font size='5'>-----------------------------------------</font>", unsafe_allow_html=True)
-    short_placeholder.markdown(f"<font size='5'>{exchange1} 多 | {exchange2} 空</font>\n<font size='5'>{ex1_ask_px} | {ex2_bid_px}</font>", unsafe_allow_html=True)
-    diff_short_placeholder.markdown(f"<font size='5'>差价: {diff_short}%</font>", unsafe_allow_html=True)
-    diffprice_short_placeholder.markdown(f"<font size='5'>价格差: {diffprice_short}</font>", unsafe_allow_html=True)
+    long_placeholder.markdown(f"<font size='4'>{exchange1} 空 | {exchange2} 多</font>\n<font size='4'>{ex1_bid_px} | {ex2_ask_px}</font>", unsafe_allow_html=True)
+    diff_long_placeholder.markdown(f"<font size='4'>差价: {diff_long}%</font>", unsafe_allow_html=True)
+    diffprice_long_placeholder.markdown(f"<font size='4'>价格差: {diffprice_long}</font>", unsafe_allow_html=True)
+    NA_placeholder.write(f"-----------------------------------------")
+    short_placeholder.markdown(f"<font size='4'>{exchange1} 多 | {exchange2} 空</font>\n<font size='4'>{ex1_ask_px} | {ex2_bid_px}</font>", unsafe_allow_html=True)
+    diff_short_placeholder.markdown(f"<font size='4'>差价: {diff_short}%</font>", unsafe_allow_html=True)
+    diffprice_short_placeholder.markdown(f"<font size='4'>价格差: {diffprice_short}</font>", unsafe_allow_html=True)
 
 # 更新参数
 update_parameters()
