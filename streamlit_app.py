@@ -366,11 +366,11 @@ def update_display():
 
     # 更新占位符内容
     long_placeholder.markdown(f"<font size='4'>{exchange1} 空 | {exchange2} 多</font>\n<font size='4'>{ex1_bid_px} | {ex2_ask_px}</font>", unsafe_allow_html=True)
-    diff_long_placeholder.markdown(f"<font size='4'>差价: {diff_long}%</font>", unsafe_allow_html=True)
+    diff_long_placeholder.markdown(f"<b><font size='6'>差价: {diff_long}%</font></b>", unsafe_allow_html=True)
     diffprice_long_placeholder.markdown(f"<font size='4'>价格差: {diffprice_long}</font>", unsafe_allow_html=True)
     NA_placeholder.write(f"-----------------------------------------")
     short_placeholder.markdown(f"<font size='4'>{exchange1} 多 | {exchange2} 空</font>\n<font size='4'>{ex1_ask_px} | {ex2_bid_px}</font>", unsafe_allow_html=True)
-    diff_short_placeholder.markdown(f"<font size='4'>差价: {diff_short}%</font>", unsafe_allow_html=True)
+    diff_short_placeholder.markdown(f"<b><font size='6'>差价: {diff_short}%</font></b>", unsafe_allow_html=True)
     diffprice_short_placeholder.markdown(f"<font size='4'>价格差: {diffprice_short}</font>", unsafe_allow_html=True)
 
 # 更新参数
