@@ -43,7 +43,7 @@ st.components.v1.html(hide_footer_js, height=0, width=0)
 # ============================================================
 # ★★★ Cloudflare Worker 代理 URL ★★★
 # ============================================================
-CF_WORKER_PROXY = ""
+CF_WORKER_PROXY = "https://curly-moon-155e.sunnysunny.workers.dev/"
 
 # 被封锁的交易所 → 强制走代理
 PROXY_REQUIRED = {"Binance", "Bybit", "BybitSPOT", "Bitget"}
