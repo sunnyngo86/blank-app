@@ -48,7 +48,7 @@ st.components.v1.html(hide_footer_js, height=0, width=0)
 # ★★★ 在这里填入你的 Cloudflare Worker 代理 URL ★★★
 # 例如: "https://sunny-proxy.xxxxx.workers.dev"
 # ============================================================
-CF_WORKER_PROXY = "https://curly-moon-155e.ngohauchin.workers.dev/"
+CF_WORKER_PROXY = "https://curly-moon-155e.sunnysunny.workers.dev/"
 
 # 已知在 Streamlit Cloud 被封锁的交易所 → 强制走代理
 PROXY_REQUIRED = {"Binance", "Bybit", "BybitSPOT"}
