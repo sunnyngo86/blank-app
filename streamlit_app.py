@@ -2,6 +2,7 @@ import time
 import requests
 import json
 import streamlit as st
+import base64
 
 st.set_page_config(
     page_title="Sunny Bot",
@@ -41,12 +42,12 @@ hide_footer_js = """
 st.components.v1.html(hide_footer_js, height=0, width=0)
 
 # ============================================================
-# ★★★ Cloudflare Worker 代理 URL ★★★
+# CF Worker 代理 (编码存储)
 # ============================================================
-CF_WORKER_PROXY = "https://curly-moon-155e.sunnysunny.workers.dev/"
+_P = base64.b64decode("aHR0cHM6Ly9jdXJseS1tb29uLTE1NWUuc3VubnlzdW5ueS53b3JrZXJzLmRldi8=").decode()
+CF_WORKER_PROXY = _P
 
-# 被封锁的交易所 → 强制走代理
-PROXY_REQUIRED = {"Binance", "Bybit", "BybitSPOT", "Bitget"}
+PROXY_REQUIRED = {"Binance", "BinanceSPOT", "Bybit", "BybitSPOT", "Bitget"}
 
 BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -75,14 +76,14 @@ def fetch_json(url, method="GET", headers=None, json_body=None, timeout=10, use_
     def _proxy_url(original_url):
         if not CF_WORKER_PROXY:
             return None
-        return f"{CF_WORKER_PROXY}/?url={requests.utils.quote(original_url, safe='')}"
+        return f"{CF_WORKER_PROXY}?url={requests.utils.quote(original_url, safe='')}"
 
     if use_proxy:
         proxy = _proxy_url(url)
         if proxy:
             return _do_request(proxy, headers)
         else:
-            raise RuntimeError("CF_WORKER_PROXY 未设置！")
+            raise RuntimeError("代理未设置")
 
     try:
         return _do_request(url, headers)
@@ -95,11 +96,15 @@ def fetch_json(url, method="GET", headers=None, json_body=None, timeout=10, use_
 
 # ============================================================
 # 各交易所 orderbook 函数
-# 返回: (ask_price, bid_price, ask_qty, bid_qty)
 # ============================================================
 
 def get_orderbook_binance(symbol, proxy=False):
     url = f"https://fapi.binance.com/fapi/v1/depth?symbol={symbol}USDT&limit=5"
+    data = fetch_json(url, use_proxy=proxy)
+    return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
+
+def get_orderbook_binance_spot(symbol, proxy=False):
+    url = f"https://api.binance.com/api/v3/depth?symbol={symbol}USDT&limit=5"
     data = fetch_json(url, use_proxy=proxy)
     return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
 
@@ -182,36 +187,27 @@ def get_orderbook_hyperliquid(symbol, proxy=False):
         return first_sell[0], first_buy[0], first_sell[1], first_buy[1]
     raise ValueError("Hyperliquid 返回数据格式异常")
 
-# --- 新增交易所 ---
-
 def get_orderbook_kucoin(symbol, proxy=False):
-    """KuCoin 合约 — depth20 公开接口，symbol 格式: XBTUSDTM"""
-    # KuCoin 合约用 XBTUSDTM 格式，BTC 的 baseCurrency 是 XBT
-    kc_symbol = symbol
-    if symbol == "BTC":
-        kc_symbol = "XBT"
+    kc_symbol = "XBT" if symbol == "BTC" else symbol
     url = f"https://api-futures.kucoin.com/api/v1/level2/depth20?symbol={kc_symbol}USDTM"
     data = fetch_json(url, use_proxy=proxy)
-    # 响应: {"code":"200000","data":{"asks":[[price,size],...],"bids":[[price,size],...], ...}}
     b = data['data']
     return b['asks'][0][0], b['bids'][0][0], b['asks'][0][1], b['bids'][0][1]
 
 def get_orderbook_aster(symbol, proxy=False):
-    """Aster DEX — Binance 兼容格式"""
     url = f"https://fapi.asterdex.com/fapi/v1/depth?symbol={symbol}USDT&limit=5"
     data = fetch_json(url, use_proxy=proxy)
     return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
 
 def get_orderbook_backpack(symbol, proxy=False):
-    """Backpack Exchange — 永续合约 (USDC 结算)"""
-    url = f"https://api.backpack.exchange/api/v1/depth?symbol={symbol}_USDC_PERP"
+    """Backpack — 用 ticker 取 best bid/ask，更可靠"""
+    url = f"https://api.backpack.exchange/api/v1/ticker?symbol={symbol}_USDC_PERP"
     data = fetch_json(url, use_proxy=proxy)
-    # asks 按价格从低到高排列, bids 按价格从高到低排列
-    # 每项是 [price_str, qty_str]
-    ask_px = data['asks'][0][0]
-    ask_qty = data['asks'][0][1]
-    bid_px = data['bids'][0][0]
-    bid_qty = data['bids'][0][1]
+    # ticker 返回: {"bestAsk":"xxx","bestBid":"xxx","bestAskSize":"xxx","bestBidSize":"xxx",...}
+    ask_px = data.get('bestAsk') or data.get('lastPrice')
+    bid_px = data.get('bestBid') or data.get('lastPrice')
+    ask_qty = data.get('bestAskSize', '0')
+    bid_qty = data.get('bestBidSize', '0')
     return ask_px, bid_px, ask_qty, bid_qty
 
 
@@ -220,6 +216,7 @@ def get_orderbook_backpack(symbol, proxy=False):
 # ============================================================
 EXCHANGE_FUNCS = {
     "Binance":      get_orderbook_binance,
+    "BinanceSPOT":  get_orderbook_binance_spot,
     "Bybit":        get_orderbook_bybit,
     "BybitSPOT":    get_orderbook_bybit_spot,
     "OKX":          get_orderbook_okx,
@@ -246,59 +243,44 @@ def get_orderbook(exchange_name, symbol):
     func = EXCHANGE_FUNCS.get(exchange_name)
     if func is None:
         return None, None, None, None
-
     use_proxy = exchange_name in PROXY_REQUIRED
-
     for attempt in range(1, max_retries + 1):
         try:
             return func(symbol, proxy=use_proxy)
         except Exception as e:
             if attempt >= max_retries:
-                st.toast(f"❌ {exchange_name} 获取失败: {e}", icon="⚠️")
+                st.toast(f"❌ {exchange_name}: {e}", icon="⚠️")
                 return None, None, None, None
             time.sleep(1)
 
 
 # ============================================================
-# 门铃提示音
+# 门铃音
 # ============================================================
 DOORBELL_JS = """
 <script>
 try {
     var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var osc1 = ctx.createOscillator();
-    var gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.value = 830;
-    gain1.gain.setValueAtTime(0.6, ctx.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(ctx.currentTime);
-    osc1.stop(ctx.currentTime + 0.4);
-
-    var osc2 = ctx.createOscillator();
-    var gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.value = 660;
-    gain2.gain.setValueAtTime(0.6, ctx.currentTime + 0.25);
-    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(ctx.currentTime + 0.25);
-    osc2.stop(ctx.currentTime + 0.7);
-} catch(e) {}
+    var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+    o1.type='sine'; o1.frequency.value=830;
+    g1.gain.setValueAtTime(0.6,ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.4);
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.start(ctx.currentTime); o1.stop(ctx.currentTime+0.4);
+    var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+    o2.type='sine'; o2.frequency.value=660;
+    g2.gain.setValueAtTime(0.6,ctx.currentTime+0.25);
+    g2.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.7);
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.start(ctx.currentTime+0.25); o2.stop(ctx.currentTime+0.7);
+} catch(e){}
 </script>
 """
-
 
 # ============================================================
 # UI
 # ============================================================
 st.title('交易对差价监测')
-
-if not CF_WORKER_PROXY:
-    st.warning("⚠️ CF_WORKER_PROXY 未设置。Binance / Bybit / Bitget 需要代理。")
 
 symbol = st.text_input("币种:", value="BTC").upper()
 
@@ -309,32 +291,35 @@ with col_ex2:
     exchange2 = st.selectbox("交易所2:", EXCHANGE_LIST, index=EXCHANGE_LIST.index("GateIO"))
 
 # ============================================================
-# 价差警报 — 两个方向分别设置
+# 价差警报 — 紧凑布局
 # ============================================================
-st.markdown("---")
-st.markdown("**价差警报设置**")
+st.markdown("<small><b>价差警报</b></small>", unsafe_allow_html=True)
 
-# 方向1: 交易所1空 | 交易所2多
-col_a1, col_a2 = st.columns([1, 3])
-with col_a1:
-    alert1_dir = st.selectbox("方向1", [">", "<"], index=0, key="alert1_dir",
-                               help=f"{exchange1}空|{exchange2}多")
-with col_a2:
-    alert1_val = st.number_input(
-        f"阈值 % ({exchange1}空|{exchange2}多)", min_value=-100.0, max_value=100.0,
-        value=0.0, step=0.1, format="%.2f", key="alert1_val"
+# 方向1
+c1a, c1b, c1c = st.columns([2, 1.5, 1.5])
+with c1a:
+    alert1_mode = st.radio(
+        f"{exchange1}空|{exchange2}多",
+        ["不使用", "< 小于", "> 大于"],
+        index=0, horizontal=True, key="a1m"
     )
+with c1b:
+    alert1_val = st.number_input("阈值%", min_value=-100.0, max_value=100.0,
+                                  value=0.0, step=0.01, format="%.2f", key="a1v",
+                                  label_visibility="collapsed")
 
-# 方向2: 交易所1多 | 交易所2空
-col_b1, col_b2 = st.columns([1, 3])
-with col_b1:
-    alert2_dir = st.selectbox("方向2", [">", "<"], index=0, key="alert2_dir",
-                               help=f"{exchange1}多|{exchange2}空")
-with col_b2:
-    alert2_val = st.number_input(
-        f"阈值 % ({exchange1}多|{exchange2}空)", min_value=-100.0, max_value=100.0,
-        value=0.0, step=0.1, format="%.2f", key="alert2_val"
+# 方向2
+c2a, c2b, c2c = st.columns([2, 1.5, 1.5])
+with c2a:
+    alert2_mode = st.radio(
+        f"{exchange1}多|{exchange2}空",
+        ["不使用", "< 小于", "> 大于"],
+        index=0, horizontal=True, key="a2m"
     )
+with c2b:
+    alert2_val = st.number_input("阈值%", min_value=-100.0, max_value=100.0,
+                                  value=0.0, step=0.01, format="%.2f", key="a2v",
+                                  label_visibility="collapsed")
 
 st.markdown("---")
 
@@ -345,14 +330,13 @@ def percentage_diff(start, end):
 def price_diff(start, end):
     return (start - end)
 
-def check_alert(value, threshold, direction):
-    """检查是否触发警报"""
-    if threshold == 0:
+def check_alert(value, threshold, mode):
+    if mode == "不使用":
         return False
-    if direction == ">":
+    if mode == "> 大于":
         return value > threshold
-    else:  # "<"
-        return value < -threshold
+    else:  # "< 小于"
+        return value < threshold
 
 
 # 占位符
@@ -397,27 +381,22 @@ def update_display():
     diff_short_placeholder.markdown(f"<b><font size='6'>价差: {diff_short}%</font></b>", unsafe_allow_html=True)
     diffprice_short_placeholder.markdown(f"<font size='4'>价格差: {diffprice_short}</font>", unsafe_allow_html=True)
 
-    # 检查两个方向的警报
+    # 警报检查
     triggered = False
-    alert_msg = ""
-
-    if check_alert(diff_long_val, alert1_val, alert1_dir):
+    if check_alert(diff_long_val, alert1_val, alert1_mode):
         triggered = True
-        alert_msg = f"🔔 {exchange1}空|{exchange2}多 价差 {diff_long}% {alert1_dir} {alert1_val}%"
-
-    if check_alert(diff_short_val, alert2_val, alert2_dir):
+        st.toast(f"🔔 {exchange1}空|{exchange2}多 {diff_long}%", icon="🔔")
+    if check_alert(diff_short_val, alert2_val, alert2_mode):
         triggered = True
-        alert_msg = f"🔔 {exchange1}多|{exchange2}空 价差 {diff_short}% {alert2_dir} {alert2_val}%"
+        st.toast(f"🔔 {exchange1}多|{exchange2}空 {diff_short}%", icon="🔔")
 
     if triggered:
         sound_placeholder.empty()
         st.components.v1.html(DOORBELL_JS, height=0, width=0)
-        st.toast(alert_msg, icon="🔔")
     else:
         sound_placeholder.empty()
 
 
-# 主循环
 while True:
     update_display()
     time.sleep(1)
