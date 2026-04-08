@@ -321,8 +321,8 @@ with col_a1:
                                help=f"{exchange1}空|{exchange2}多")
 with col_a2:
     alert1_val = st.number_input(
-        f"阈值 % ({exchange1}空|{exchange2}多)", min_value=0.0, max_value=100.0,
-        value=0.0, step=0.01, format="%.2f", key="alert1_val"
+        f"阈值 % ({exchange1}空|{exchange2}多)", min_value=-100.0, max_value=100.0,
+        value=0.0, step=0.1, format="%.2f", key="alert1_val"
     )
 
 # 方向2: 交易所1多 | 交易所2空
@@ -332,8 +332,8 @@ with col_b1:
                                help=f"{exchange1}多|{exchange2}空")
 with col_b2:
     alert2_val = st.number_input(
-        f"阈值 % ({exchange1}多|{exchange2}空)", min_value=0.0, max_value=100.0,
-        value=0.0, step=0.01, format="%.2f", key="alert2_val"
+        f"阈值 % ({exchange1}多|{exchange2}空)", min_value=-100.0, max_value=100.0,
+        value=0.0, step=0.1, format="%.2f", key="alert2_val"
     )
 
 st.markdown("---")
