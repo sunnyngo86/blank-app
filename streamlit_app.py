@@ -8,11 +8,7 @@ st.set_page_config(
     page_icon=":rocket:",
     layout="centered",
     initial_sidebar_state="auto",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
+    menu_items={'Get Help': None, 'Report a bug': None, 'About': None}
 )
 
 hide_streamlit_style = """
@@ -45,11 +41,11 @@ hide_footer_js = """
 st.components.v1.html(hide_footer_js, height=0, width=0)
 
 # ============================================================
-# ★★★ 在这里填入你的 Cloudflare Worker 代理 URL ★★★
+# ★★★ Cloudflare Worker 代理 URL ★★★
 # ============================================================
-CF_WORKER_PROXY = "https://curly-moon-155e.sunnysunny.workers.dev/"
+CF_WORKER_PROXY = ""
 
-# 已知在 Streamlit Cloud 被封锁的交易所 → 强制走代理
+# 被封锁的交易所 → 强制走代理
 PROXY_REQUIRED = {"Binance", "Bybit", "BybitSPOT", "Bitget"}
 
 BROWSER_HEADERS = {
@@ -189,33 +185,34 @@ def get_orderbook_hyperliquid(symbol, proxy=False):
 # --- 新增交易所 ---
 
 def get_orderbook_kucoin(symbol, proxy=False):
-    """KuCoin 合约 — 用 level2_20 公开接口"""
-    url = f"https://api-futures.kucoin.com/api/v1/level2/depth20?symbol={symbol}USDTM"
+    """KuCoin 合约 — depth20 公开接口，symbol 格式: XBTUSDTM"""
+    # KuCoin 合约用 XBTUSDTM 格式，BTC 的 baseCurrency 是 XBT
+    kc_symbol = symbol
+    if symbol == "BTC":
+        kc_symbol = "XBT"
+    url = f"https://api-futures.kucoin.com/api/v1/level2/depth20?symbol={kc_symbol}USDTM"
     data = fetch_json(url, use_proxy=proxy)
+    # 响应: {"code":"200000","data":{"asks":[[price,size],...],"bids":[[price,size],...], ...}}
     b = data['data']
     return b['asks'][0][0], b['bids'][0][0], b['asks'][0][1], b['bids'][0][1]
 
 def get_orderbook_aster(symbol, proxy=False):
-    """Aster DEX — 和 Binance 格式兼容"""
+    """Aster DEX — Binance 兼容格式"""
     url = f"https://fapi.asterdex.com/fapi/v1/depth?symbol={symbol}USDT&limit=5"
     data = fetch_json(url, use_proxy=proxy)
     return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
 
 def get_orderbook_backpack(symbol, proxy=False):
-    """Backpack Exchange — 永续合约用 _USDC_PERP"""
+    """Backpack Exchange — 永续合约 (USDC 结算)"""
     url = f"https://api.backpack.exchange/api/v1/depth?symbol={symbol}_USDC_PERP"
     data = fetch_json(url, use_proxy=proxy)
-    return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
-
-def get_orderbook_lighter(symbol, proxy=False):
-    """Lighter DEX — 通过 orderBooks endpoint"""
-    # Lighter 用 market index, 先尝试用 symbol 名称查
-    url = f"https://mainnet.zklighter.elliot.ai/api/v1/orderBooks?symbol={symbol}_USDC"
-    data = fetch_json(url, use_proxy=proxy)
-    # orderBooks 返回 asks/bids 数组, 每个是 [price, size]
-    if 'asks' in data and 'bids' in data and len(data['asks']) > 0 and len(data['bids']) > 0:
-        return data['asks'][0][0], data['bids'][0][0], data['asks'][0][1], data['bids'][0][1]
-    raise ValueError("Lighter 返回数据为空或格式异常")
+    # asks 按价格从低到高排列, bids 按价格从高到低排列
+    # 每项是 [price_str, qty_str]
+    ask_px = data['asks'][0][0]
+    ask_qty = data['asks'][0][1]
+    bid_px = data['bids'][0][0]
+    bid_qty = data['bids'][0][1]
+    return ask_px, bid_px, ask_qty, bid_qty
 
 
 # ============================================================
@@ -239,7 +236,6 @@ EXCHANGE_FUNCS = {
     "KuCoin":       get_orderbook_kucoin,
     "Aster":        get_orderbook_aster,
     "Backpack":     get_orderbook_backpack,
-    "Lighter":      get_orderbook_lighter,
 }
 
 EXCHANGE_LIST = list(EXCHANGE_FUNCS.keys())
@@ -258,49 +254,40 @@ def get_orderbook(exchange_name, symbol):
             return func(symbol, proxy=use_proxy)
         except Exception as e:
             if attempt >= max_retries:
-                # 只显示一次 toast 提示，2秒后自动消失
-                st.toast(f"❌ {exchange_name} 数据获取失败: {e}", icon="⚠️")
+                st.toast(f"❌ {exchange_name} 获取失败: {e}", icon="⚠️")
                 return None, None, None, None
             time.sleep(1)
 
 
 # ============================================================
-# 门铃提示音（用 JS 生成，无需外部文件）
+# 门铃提示音
 # ============================================================
 DOORBELL_JS = """
 <script>
-function playDoorbell() {
-    try {
-        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc1 = ctx.createOscillator();
+    var gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.value = 830;
+    gain1.gain.setValueAtTime(0.6, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.4);
 
-        // 第一声：叮
-        var osc1 = ctx.createOscillator();
-        var gain1 = ctx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.value = 830;  // E5
-        gain1.gain.setValueAtTime(0.6, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.4);
-
-        // 第二声：咚
-        var osc2 = ctx.createOscillator();
-        var gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.value = 660;  // E4
-        gain2.gain.setValueAtTime(0.6, ctx.currentTime + 0.25);
-        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(ctx.currentTime + 0.25);
-        osc2.stop(ctx.currentTime + 0.7);
-    } catch(e) {
-        console.log('Audio not supported');
-    }
-}
-playDoorbell();
+    var osc2 = ctx.createOscillator();
+    var gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.value = 660;
+    gain2.gain.setValueAtTime(0.6, ctx.currentTime + 0.25);
+    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.25);
+    osc2.stop(ctx.currentTime + 0.7);
+} catch(e) {}
 </script>
 """
 
@@ -321,12 +308,35 @@ with col_ex1:
 with col_ex2:
     exchange2 = st.selectbox("交易所2:", EXCHANGE_LIST, index=EXCHANGE_LIST.index("GateIO"))
 
-# 价差警报阈值
-alert_threshold = st.number_input(
-    "价差警报阈值 (%)", min_value=0.0, max_value=100.0,
-    value=0.0, step=0.01, format="%.2f",
-    help="当任一方向价差超过此值时，发出门铃声提示。设为 0 表示关闭。"
-)
+# ============================================================
+# 价差警报 — 两个方向分别设置
+# ============================================================
+st.markdown("---")
+st.markdown("**价差警报设置**")
+
+# 方向1: 交易所1空 | 交易所2多
+col_a1, col_a2 = st.columns([1, 3])
+with col_a1:
+    alert1_dir = st.selectbox("方向1", [">", "<"], index=0, key="alert1_dir",
+                               help=f"{exchange1}空|{exchange2}多")
+with col_a2:
+    alert1_val = st.number_input(
+        f"阈值 % ({exchange1}空|{exchange2}多)", min_value=0.0, max_value=100.0,
+        value=0.0, step=0.01, format="%.2f", key="alert1_val"
+    )
+
+# 方向2: 交易所1多 | 交易所2空
+col_b1, col_b2 = st.columns([1, 3])
+with col_b1:
+    alert2_dir = st.selectbox("方向2", [">", "<"], index=0, key="alert2_dir",
+                               help=f"{exchange1}多|{exchange2}空")
+with col_b2:
+    alert2_val = st.number_input(
+        f"阈值 % ({exchange1}多|{exchange2}空)", min_value=0.0, max_value=100.0,
+        value=0.0, step=0.01, format="%.2f", key="alert2_val"
+    )
+
+st.markdown("---")
 
 
 def percentage_diff(start, end):
@@ -334,6 +344,15 @@ def percentage_diff(start, end):
 
 def price_diff(start, end):
     return (start - end)
+
+def check_alert(value, threshold, direction):
+    """检查是否触发警报"""
+    if threshold <= 0:
+        return False
+    if direction == ">":
+        return value > threshold
+    else:  # "<"
+        return value < -threshold
 
 
 # 占位符
@@ -344,7 +363,7 @@ NA_placeholder = st.empty()
 short_placeholder = st.empty()
 diff_short_placeholder = st.empty()
 diffprice_short_placeholder = st.empty()
-alert_placeholder = st.empty()
+sound_placeholder = st.empty()
 
 
 def update_display():
@@ -369,7 +388,7 @@ def update_display():
     )
     diff_long_placeholder.markdown(f"<b><font size='6'>价差: {diff_long}%</font></b>", unsafe_allow_html=True)
     diffprice_long_placeholder.markdown(f"<font size='4'>价格差: {diffprice_long}</font>", unsafe_allow_html=True)
-    NA_placeholder.write(f"-----------------------------------------")
+    NA_placeholder.write("-----------------------------------------")
     short_placeholder.markdown(
         f"<font size='4'>{exchange1} 多 | {exchange2} 空</font>\n"
         f"<font size='4'>{ex1_ask_px} | {ex2_bid_px}</font>",
@@ -378,15 +397,24 @@ def update_display():
     diff_short_placeholder.markdown(f"<b><font size='6'>价差: {diff_short}%</font></b>", unsafe_allow_html=True)
     diffprice_short_placeholder.markdown(f"<font size='4'>价格差: {diffprice_short}</font>", unsafe_allow_html=True)
 
-    # 价差警报
-    if alert_threshold > 0:
-        if abs(diff_long_val) >= alert_threshold or abs(diff_short_val) >= alert_threshold:
-            triggered = diff_long if abs(diff_long_val) >= alert_threshold else diff_short
-            direction = f"{exchange1}空|{exchange2}多" if abs(diff_long_val) >= alert_threshold else f"{exchange1}多|{exchange2}空"
-            alert_placeholder.components.v1.html(DOORBELL_JS, height=0, width=0)
-            st.toast(f"🔔 价差警报! {direction} 达到 {triggered}%", icon="🔔")
-        else:
-            alert_placeholder.empty()
+    # 检查两个方向的警报
+    triggered = False
+    alert_msg = ""
+
+    if check_alert(diff_long_val, alert1_val, alert1_dir):
+        triggered = True
+        alert_msg = f"🔔 {exchange1}空|{exchange2}多 价差 {diff_long}% {alert1_dir} {alert1_val}%"
+
+    if check_alert(diff_short_val, alert2_val, alert2_dir):
+        triggered = True
+        alert_msg = f"🔔 {exchange1}多|{exchange2}空 价差 {diff_short}% {alert2_dir} {alert2_val}%"
+
+    if triggered:
+        sound_placeholder.empty()
+        st.components.v1.html(DOORBELL_JS, height=0, width=0)
+        st.toast(alert_msg, icon="🔔")
+    else:
+        sound_placeholder.empty()
 
 
 # 主循环
