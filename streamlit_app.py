@@ -347,7 +347,7 @@ def price_diff(start, end):
 
 def check_alert(value, threshold, direction):
     """检查是否触发警报"""
-    if threshold = 0:
+    if threshold == 0:
         return False
     if direction == ">":
         return value > threshold
