@@ -14,7 +14,7 @@ st.components.v1.html('<script>setInterval(()=>{document.querySelectorAll("foote
 
 _P = base64.b64decode("aHR0cHM6Ly9jdXJseS1tb29uLTE1NWUuc3VubnlzdW5ueS53b3JrZXJzLmRldi8=").decode()
 CF = _P
-NEED_PROXY = {"Binance","Binance-SPOT","Bybit","Bybit-SPOT","Bitget","Bitget-SPOT"}
+NEED_PROXY = {"Binance","Binance-SPOT","Bybit","Bybit-SPOT"}
 H = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36","Accept":"application/json"}
 
 def fj(url, method="GET", headers=None, jb=None, timeout=10, proxy=False):
@@ -145,11 +145,17 @@ def ob_backpack(s, px=False):
     return a, b, d.get('bestAskSize','0'), d.get('bestBidSize','0')
 
 def ob_coinw(s, px=False):
-    """CoinW — 用 ticker (depth 需要 auth)"""
+    """CoinW — ticker 公开接口"""
     d = fj(f"https://api.coinw.com/v1/perpumPublic/ticker?instrument={s.upper()}", proxy=px)
     if d.get('code')!=0 or not d.get('data'): _cn("CoinW",s)
-    t=d['data']
-    return t.get('bestAskPrice',t.get('lastPrice')), t.get('bestBidPrice',t.get('lastPrice')), t.get('bestAskVolume','0'), t.get('bestBidVolume','0')
+    t = d['data']
+    if isinstance(t, list):
+        if not t: _cn("CoinW",s)
+        t = t[0]
+    ap = t.get('bestAskPrice') or t.get('askPrice') or t.get('lastPrice')
+    bp = t.get('bestBidPrice') or t.get('bidPrice') or t.get('lastPrice')
+    if not ap or not bp: _cn("CoinW",s)
+    return ap, bp, t.get('bestAskVolume','0'), t.get('bestBidVolume','0')
 
 
 EX = {
@@ -199,12 +205,12 @@ e2_ph = st.empty()
 st.markdown("<small><b>价差警报</b></small>", unsafe_allow_html=True)
 ac = st.container()
 with ac:
-    r1a,r1b,r1c = st.columns([2.8,2.2,1.5])
+    r1a,r1b,r1c = st.columns([2,3.5,1.5])
     with r1a: st.markdown(f"<small>{exchange1}空|{exchange2}多</small>", unsafe_allow_html=True)
     with r1b: m1=st.radio("m1",["不使用","<小于",">大于"],index=0,horizontal=True,key="m1",label_visibility="collapsed")
     with r1c: v1=st.number_input("v1",min_value=-100.0,max_value=100.0,value=0.0,step=0.1,format="%.2f",key="v1",label_visibility="collapsed")
 
-    r2a,r2b,r2c = st.columns([2.8,2.2,1.5])
+    r2a,r2b,r2c = st.columns([2,3.5,1.5])
     with r2a: st.markdown(f"<small>{exchange1}多|{exchange2}空</small>", unsafe_allow_html=True)
     with r2b: m2=st.radio("m2",["不使用","<小于",">大于"],index=0,horizontal=True,key="m2",label_visibility="collapsed")
     with r2c: v2=st.number_input("v2",min_value=-100.0,max_value=100.0,value=0.0,step=0.1,format="%.2f",key="v2",label_visibility="collapsed")
