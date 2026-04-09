@@ -173,7 +173,7 @@ def get_orderbook(ex, sym):
     px = ex in PROXY_REQUIRED
     for att in range(1, 4):
         try:
-            return func(sym, proxy=px)
+            return func(sym, px=px)
         except Exception as e:
             if att >= 3:
                 # 隐藏 URL，只显示交易所名和简短错误
