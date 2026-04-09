@@ -208,7 +208,7 @@ c1, c2 = st.columns(2)
 with c1:
     exchange1 = st.selectbox("交易所1:", EXCHANGE_LIST, index=0)
 with c2:
-    exchange2 = st.selectbox("交易所2:", EXCHANGE_LIST, index=8)
+    exchange2 = st.selectbox("交易所2:", EXCHANGE_LIST, index=7)
 
 # 币种不存在的提示占位
 ex1_err = st.empty()
