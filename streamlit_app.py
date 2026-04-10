@@ -139,40 +139,27 @@ def ob_aster(s, px=False):
     return d['asks'][0][0], d['bids'][0][0], d['asks'][0][1], d['bids'][0][1]
 
 def ob_backpack(s, px=False):
-    """Backpack — 先尝试 _USDC_PERP，失败则 _USD_PERP"""
+    """Backpack — depth endpoint, 先试 _USDC_PERP 再试 _USD_PERP"""
     for suffix in ["_USDC_PERP", "_USD_PERP"]:
         try:
-            d = fj(f"https://api.backpack.exchange/api/v1/ticker?symbol={s}{suffix}", proxy=px)
-            a=d.get('bestAsk'); b=d.get('bestBid')
-            if a and b: return a, b, d.get('bestAskSize','0'), d.get('bestBidSize','0')
+            d = fj(f"https://api.backpack.exchange/api/v1/depth?symbol={s}{suffix}", proxy=px)
+            asks = d.get('asks', [])
+            bids = d.get('bids', [])
+            if asks and bids:
+                # asks 按价格从低到高 (asks[0] = best ask = 最低卖价)
+                # bids 按价格从高到低 (bids[0] = best bid = 最高买价)
+                return asks[0][0], bids[0][0], asks[0][1], bids[0][1]
         except: pass
     _cn("Backpack",s)
 
 def ob_coinw(s, px=False):
-    """CoinW — ticker 公开接口, instrument 用小写"""
-    # 先尝试单个 ticker
-    try:
-        d = fj(f"https://api.coinw.com/v1/perpumPublic/ticker?instrument={s.lower()}", proxy=px)
-        if d.get('code')==0 and d.get('data'):
-            t = d['data']
-            if isinstance(t, list):
-                t = t[0] if t else None
-            if t:
-                ap = t.get('bestAskPrice') or t.get('askPrice') or t.get('lastPrice')
-                bp = t.get('bestBidPrice') or t.get('bidPrice') or t.get('lastPrice')
-                if ap and bp: return ap, bp, t.get('bestAskVolume','0'), t.get('bestBidVolume','0')
-    except: pass
-    # 回退：从 tickers 列表里找
-    try:
-        d = fj(f"https://api.coinw.com/v1/perpumPublic/tickers", proxy=px)
-        if d.get('code')==0 and d.get('data'):
-            for t in d['data']:
-                name = (t.get('instrument') or t.get('base') or '').upper()
-                if name == s:
-                    ap = t.get('bestAskPrice') or t.get('askPrice') or t.get('lastPrice')
-                    bp = t.get('bestBidPrice') or t.get('bidPrice') or t.get('lastPrice')
-                    if ap and bp: return ap, bp, '0', '0'
-    except: pass
+    """CoinW — tickers 公开接口 (只有 last_price, 无 bid/ask)"""
+    d = fj("https://api.coinw.com/v1/perpumPublic/tickers", proxy=px)
+    if d.get('code') != 0 or not d.get('data'): _cn("CoinW",s)
+    for t in d['data']:
+        if (t.get('base_coin','').upper() == s) or (t.get('name','').upper() == f"{s}USDT"):
+            lp = t.get('last_price') or t.get('fair_price')
+            if lp: return lp, lp, '0', '0'
     _cn("CoinW",s)
 
 
