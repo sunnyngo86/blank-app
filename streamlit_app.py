@@ -139,16 +139,17 @@ def ob_aster(s, px=False):
     return d['asks'][0][0], d['bids'][0][0], d['asks'][0][1], d['bids'][0][1]
 
 def ob_backpack(s, px=False):
-    """Backpack — depth endpoint, 先试 _USDC_PERP 再试 _USD_PERP"""
+    """Backpack — depth with limit=5, sort to ensure correct best ask/bid"""
     for suffix in ["_USDC_PERP", "_USD_PERP"]:
         try:
-            d = fj(f"https://api.backpack.exchange/api/v1/depth?symbol={s}{suffix}", proxy=px)
+            d = fj(f"https://api.backpack.exchange/api/v1/depth?symbol={s}{suffix}&limit=5", proxy=px)
             asks = d.get('asks', [])
             bids = d.get('bids', [])
             if asks and bids:
-                # asks 按价格从低到高 (asks[0] = best ask = 最低卖价)
-                # bids 按价格从高到低 (bids[0] = best bid = 最高买价)
-                return asks[0][0], bids[0][0], asks[0][1], bids[0][1]
+                # 确保正确排序：asks 取最低价, bids 取最高价
+                best_ask = min(asks, key=lambda x: float(x[0]))
+                best_bid = max(bids, key=lambda x: float(x[0]))
+                return best_ask[0], best_bid[0], best_ask[1], best_bid[1]
         except: pass
     _cn("Backpack",s)
 
